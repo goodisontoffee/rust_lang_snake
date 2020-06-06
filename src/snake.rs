@@ -135,4 +135,8 @@ impl Snake {
 
         return false;
     }
+
+    pub fn length(&self) -> usize {
+        self.body.len()
+    }
 }

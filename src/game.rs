@@ -9,6 +9,7 @@ use crate::snake::{Direction, Snake};
 const FOOD_COLOR: Color = [0.80, 0.00, 0.00, 1.0];
 const BORDER_COLOR: Color = [0.00, 0.00, 0.00, 1.0];
 const GAMEOVER_COLOR: Color = [0.90, 0.00, 0.00, 0.5];
+const GAMEWON_COLOR: Color = [0.90, 0.90, 0.00, 0.5];
 
 const MOVING_PERIOD: f64 = 0.1;
 const RESTART_TIME: f64 = 1.0;
@@ -22,23 +23,29 @@ pub struct Game {
 
     width: i32,
     height: i32,
+    available_squares: i32,
 
     game_over: bool,
+    game_won: bool,
     waiting_time: f64,
 }
 
 impl Game {
     pub fn new(width: i32, height: i32) -> Game {
-        Game {
-            snake: Snake::new(2, 2),
+        let mut game = Game {
+            snake: Snake::new(2, 1),
             waiting_time: 0.0,
-            food_exists: true,
-            food_x: 6,
-            food_y: 4,
+            food_exists: false,
+            food_x: 0,
+            food_y: 0,
             width,
             height,
+            available_squares: (width - 2) * (height - 2),
             game_over: false,
-        }
+            game_won: false,
+        };
+        game.add_food();
+        game
     }
 
     pub fn key_pressed(&mut self, key: Key) {
@@ -51,10 +58,10 @@ impl Game {
             Key::Down => Some(Direction::Down),
             Key::Left => Some(Direction::Left),
             Key::Right => Some(Direction::Right),
-            _ => return,
+            _ => None,
         };
 
-        if dir.unwrap() == self.snake.head_direction().opposite() {
+        if dir == None || dir.unwrap() == self.snake.head_direction().opposite() {
             return;
         }
 
@@ -76,12 +83,23 @@ impl Game {
         if self.game_over {
             draw_rectangle(GAMEOVER_COLOR, 0, 0, self.width, self.height, con, g);
         }
+
+        if self.game_won {
+            draw_rectangle(GAMEWON_COLOR, 0, 0, self.width, self.height, con, g);
+        }
     }
 
     pub fn update(&mut self, delta_time: f64) {
         self.waiting_time += delta_time;
 
         if self.game_over {
+            if self.waiting_time > RESTART_TIME {
+                self.restart();
+            }
+            return;
+        }
+
+        if self.game_won {
             if self.waiting_time > RESTART_TIME {
                 self.restart();
             }
@@ -116,6 +134,11 @@ impl Game {
     }
 
     fn add_food(&mut self) {
+        if self.snake.length() >= self.available_squares as usize {
+            self.game_won = true;
+            return;
+        }
+
         let mut rng = thread_rng();
 
         let mut new_x = rng.gen_range(1, self.width - 1);
@@ -143,11 +166,31 @@ impl Game {
     }
 
     fn restart(&mut self) {
-        self.snake = Snake::new(2, 2);
+        self.snake = Snake::new(2, 1);
         self.waiting_time = 0.0;
-        self.food_exists = true;
-        self.food_x = 6;
-        self.food_y = 4;
+        self.food_exists = false;
+        self.food_x = 0;
+        self.food_y = 0;
         self.game_over = false;
+        self.game_won = false;
+        self.add_food();
+    }
+}
+
+#[cfg(test)]
+mod game_tests {
+    use super::*;
+
+    #[test]
+    fn uninteresting_pressed_keys_are_ignored() {
+        let mut game = Game::new(8, 8);
+        game.key_pressed(Key::Q);
+    }
+
+    #[test]
+    fn game_is_won_if_there_is_nowhere_to_place_new_food() {
+        let game = Game::new(4, 3);
+        assert_eq!(game.game_won, true);
+        assert_eq!(game.food_exists, false);
     }
 }
