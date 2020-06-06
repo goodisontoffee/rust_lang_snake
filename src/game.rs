@@ -33,7 +33,7 @@ pub struct Game {
 impl Game {
     pub fn new(width: i32, height: i32) -> Game {
         let mut game = Game {
-            snake: Snake::new(2, 1),
+            snake: Snake::new(2, 2),
             waiting_time: 0.0,
             food_exists: false,
             food_x: 0,
@@ -166,7 +166,7 @@ impl Game {
     }
 
     fn restart(&mut self) {
-        self.snake = Snake::new(2, 1);
+        self.snake = Snake::new(2, 2);
         self.waiting_time = 0.0;
         self.food_exists = false;
         self.food_x = 0;
