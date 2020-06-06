@@ -28,6 +28,8 @@ pub struct Game {
     game_over: bool,
     game_won: bool,
     waiting_time: f64,
+
+    high_score: usize,
 }
 
 impl Game {
@@ -43,6 +45,7 @@ impl Game {
             available_squares: (width - 2) * (height - 2),
             game_over: false,
             game_won: false,
+            high_score: 0,
         };
         game.add_food();
         game
@@ -115,6 +118,14 @@ impl Game {
         }
     }
 
+    pub fn score(&self) -> usize {
+        self.snake.length()
+    }
+
+    pub fn high_score(&self) -> usize {
+        self.high_score
+    }
+
     fn check_eating(&mut self) {
         let (head_x, head_y): (i32, i32) = self.snake.head_position();
         if self.food_exists && self.food_x == head_x && self.food_y == head_y {
@@ -166,6 +177,10 @@ impl Game {
     }
 
     fn restart(&mut self) {
+        if self.score() > self.high_score {
+            self.high_score = self.score();
+        }
+
         self.snake = Snake::new(2, 2);
         self.waiting_time = 0.0;
         self.food_exists = false;
