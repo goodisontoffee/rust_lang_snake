@@ -152,11 +152,11 @@ impl Game {
 
         let mut rng = thread_rng();
 
-        let mut new_x = rng.gen_range(1, self.width - 1);
-        let mut new_y = rng.gen_range(1, self.height - 1);
+        let mut new_x = rng.gen_range(1..self.width - 1);
+        let mut new_y = rng.gen_range(1..self.height - 1);
         while self.snake.overlap_tail(new_x, new_y) {
-            new_x = rng.gen_range(1, self.width - 1);
-            new_y = rng.gen_range(1, self.height - 1);
+            new_x = rng.gen_range(1..self.width - 1);
+            new_y = rng.gen_range(1..self.height - 1);
             // NOTE: Can loop forever if the snake has taken all the available spaces in the game, detect and present game won?
             // We know this is the case if the snake has length equal to all the valid squares in the game board
         }
